@@ -2,7 +2,7 @@ package com.lambdaschool.todos.service;
 
 import com.lambdaschool.todos.model.Todo;
 import com.lambdaschool.todos.repository.ToDoRepository;
-import com.lambdaschool.todos.view.CountQuotes;
+import com.lambdaschool.todos.view.CountTodos;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,16 +13,16 @@ import javax.persistence.EntityNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
-@Service(value = "quoteService")
+@Service(value = "todoService")
 public class TodoServiceImpl implements TodoService
 {
     @Autowired
-    private ToDoRepository quoterepos;
+    private ToDoRepository todorepos;
 
     @Override
-    public ArrayList<CountQuotes> getCountQuotes()
+    public ArrayList<CountTodos> getCountTodos()
     {
-//        return quoterepos.getCountQuotes();
+//        return todorepos.getCountTodos();
         return null;
     }
 
@@ -30,25 +30,25 @@ public class TodoServiceImpl implements TodoService
     public List<Todo> findAll()
     {
         List<Todo> list = new ArrayList<>();
-        quoterepos.findAll().iterator().forEachRemaining(list::add);
+        todorepos.findAll().iterator().forEachRemaining(list::add);
         return list;
     }
 
     @Override
-    public Todo findQuoteById(long id)
+    public Todo findTodoById(long id)
     {
-        return quoterepos.findById(id).orElseThrow(() -> new EntityNotFoundException(Long.toString(id)));
+        return todorepos.findById(id).orElseThrow(() -> new EntityNotFoundException(Long.toString(id)));
     }
 
     @Override
     public void delete(long id)
     {
-        if (quoterepos.findById(id).isPresent())
+        if (todorepos.findById(id).isPresent())
         {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (quoterepos.findById(id).get().getUser().getUsername().equalsIgnoreCase(authentication.getName()))
+            if (todorepos.findById(id).get().getUser().getUsername().equalsIgnoreCase(authentication.getName()))
             {
-                quoterepos.deleteById(id);
+                todorepos.deleteById(id);
             } else
             {
                 throw new EntityNotFoundException(Long.toString(id) + " " + authentication.getName());
@@ -63,14 +63,14 @@ public class TodoServiceImpl implements TodoService
     @Override
     public Todo save(Todo todo)
     {
-        return quoterepos.save(todo);
+        return todorepos.save(todo);
     }
 
     @Override
     public List<Todo> findByUserName(String username)
     {
         List<Todo> list = new ArrayList<>();
-        quoterepos.findAll().iterator().forEachRemaining(list::add);
+        todorepos.findAll().iterator().forEachRemaining(list::add);
 
         list.removeIf(q -> !q.getUser().getUsername().equalsIgnoreCase(username));
         return list;
@@ -79,7 +79,7 @@ public class TodoServiceImpl implements TodoService
     @Override
     public Todo update(Todo todo, long id)
     {
-            Todo newTodo = quoterepos.findById(id)
+            Todo newTodo = todorepos.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException(Long.toString(id)));
 
             if (todo.getDescription() != null)
@@ -92,6 +92,6 @@ public class TodoServiceImpl implements TodoService
                 newTodo.setUser(todo.getUser());
             }
 
-            return quoterepos.save(newTodo);
+            return todorepos.save(newTodo);
     }
 }

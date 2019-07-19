@@ -2,11 +2,14 @@ package com.lambdaschool.todos.controller;
 
 import com.lambdaschool.todos.model.Todo;
 import com.lambdaschool.todos.service.TodoService;
-import com.lambdaschool.todos.view.CountQuotes;
+import com.lambdaschool.todos.service.UserService;
+import com.lambdaschool.todos.view.CountTodos;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -17,35 +20,37 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/quotes")
-public class QuotesController
+@RequestMapping("/todos")
+public class TodoController
 {
     @Autowired
     TodoService todoService;
+    @Autowired
+    UserService userService;
 
-    @GetMapping(value = "/quotes",
+    @GetMapping(value = "/todos",
                 produces = {"application/json"})
-    public ResponseEntity<?> listAllQuotes()
+    public ResponseEntity<?> listAllTodos()
     {
         List<Todo> allTodos = todoService.findAll();
         return new ResponseEntity<>(allTodos, HttpStatus.OK);
     }
 
 
-    @GetMapping(value = "/quote/{quoteId}",
+    @GetMapping(value = "/todo/{todoId}",
                 produces = {"application/json"})
-    public ResponseEntity<?> getQuote(
+    public ResponseEntity<?> getTodo(
             @PathVariable
-                    Long quoteId)
+                    Long todoId)
     {
-        Todo q = todoService.findQuoteById(quoteId);
+        Todo q = todoService.findTodoById(todoId);
         return new ResponseEntity<>(q, HttpStatus.OK);
     }
 
 
     @GetMapping(value = "/username/{userName}",
                 produces = {"application/json"})
-    public ResponseEntity<?> findQuoteByUserName(
+    public ResponseEntity<?> findTodoByUserName(
             @PathVariable
                     String userName)
     {
@@ -54,18 +59,18 @@ public class QuotesController
     }
 
 
-    @GetMapping(value = "/quotescount",
+    @GetMapping(value = "/todoscount",
                 produces = {"application/json"})
-    public ResponseEntity<?> getQuotesCount()
+    public ResponseEntity<?> getTodosCount()
     {
-        ArrayList<CountQuotes> myList = todoService.getCountQuotes();
+        ArrayList<CountTodos> myList = todoService.getCountTodos();
         myList.sort((q1, q2) -> q1.getUsername().compareToIgnoreCase(q2.getUsername()));
         return new ResponseEntity<>(myList, HttpStatus.OK);
     }
 
 
-    @PostMapping(value = "/quote")
-    public ResponseEntity<?> addNewQuote(@Valid
+    @PostMapping(value = "/todo")
+    public ResponseEntity<?> addNewTodo(@Valid
                                          @RequestBody
                                                  Todo newTodo) throws URISyntaxException
     {
@@ -73,20 +78,23 @@ public class QuotesController
 
         // set the location header for the newly created resource
         HttpHeaders responseHeaders = new HttpHeaders();
-        URI newQuoteURI = ServletUriComponentsBuilder.fromCurrentRequest().path("/{quoteid}").buildAndExpand(newTodo.getTodoid()).toUri();
+        URI newQuoteURI = ServletUriComponentsBuilder.fromCurrentRequest().path("/{todoid}").buildAndExpand(newTodo.getTodoid()).toUri();
         responseHeaders.setLocation(newQuoteURI);
 
         return new ResponseEntity<>(null, responseHeaders, HttpStatus.CREATED);
     }
 
-    @PutMapping(value = "/quote/{quoteid}")
-    public ResponseEntity<?> updateQuote(
+    @PutMapping(value = "/todo/{todoid}",
+            consumes = {"application/json"})
+    public ResponseEntity<?> updateTodo(
             @RequestBody
                     Todo updateTodo,
             @PathVariable
-                    long quoteid)
+                    long todoid)
     {
-        todoService.update(updateTodo, quoteid);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        updateTodo.setUser(userService.findUserByName(authentication.getName()));
+        todoService.update(updateTodo, todoid);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

@@ -1,6 +1,8 @@
 package com.lambdaschool.todos.controller;
 
+import com.lambdaschool.todos.model.Todo;
 import com.lambdaschool.todos.model.User;
+import com.lambdaschool.todos.service.TodoService;
 import com.lambdaschool.todos.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -14,6 +16,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -23,6 +26,8 @@ public class UserController
 
     @Autowired
     private UserService userService;
+    @Autowired
+    private TodoService todoService;
 
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     @GetMapping(value = "/users", produces = {"application/json"})
@@ -43,7 +48,7 @@ public class UserController
     }
 
 
-    @GetMapping(value = "/getusername", produces = {"application/json"})
+    @GetMapping(value = "/mine", produces = {"application/json"})
     @ResponseBody
     public ResponseEntity<?> getCurrentUserName(Authentication authentication)
     {
@@ -89,5 +94,14 @@ public class UserController
     {
         userService.delete(id);
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping(value = "/todo/{userId}", produces = {"application/json"})
+    public ResponseEntity<?> addNewTodoToUser(@RequestBody String todo, @PathVariable long userId)
+    {
+        User u = userService.findUserById(userId);
+        Todo addedTodo = new Todo(todo, new Date(), u);
+        todoService.save(addedTodo);
+        return new ResponseEntity<>(null, null, HttpStatus.CREATED);
     }
 }
